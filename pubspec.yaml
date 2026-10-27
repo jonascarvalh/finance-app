@@ -1,0 +1,44 @@
+name: fluxo
+description: "Fluxo — app de finanças pessoais com Clean Architecture, gráficos e tema claro/escuro."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Estado
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+
+  # Injeção de dependência
+  get_it: ^9.0.5
+
+  # Persistência local
+  sqflite: ^2.4.2
+  sqflite_common_ffi: ^2.3.6 # SQLite no Windows/Linux
+  path: ^1.9.0
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.3
+
+  # UI / utilidades
+  fl_chart: ^1.1.0
+  intl: any
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
