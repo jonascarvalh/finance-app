@@ -108,7 +108,7 @@ void main() {
   blocTest<TransactionFormCubit, TransactionFormState>(
     'falha ao salvar expõe a mensagem',
     setUp: () => when(() => addTransaction(any()))
-        .thenAnswer((_) async => Err(const StorageFailure('Sem espaço'))),
+        .thenAnswer((_) async => const Err(StorageFailure('Sem espaço'))),
     build: () => build(
       TransactionFormState.create(date: today).copyWith(title: 'Teste', amountInCents: 100),
     ),

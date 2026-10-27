@@ -79,7 +79,7 @@ void main() {
   blocTest<TransactionsCubit, TransactionsState>(
     'load emite falha com a mensagem do erro',
     setUp: () => when(() => getFinancialSummary(any()))
-        .thenAnswer((_) async => Err(const StorageFailure('Falhou'))),
+        .thenAnswer((_) async => const Err(StorageFailure('Falhou'))),
     build: build,
     act: (cubit) => cubit.load(),
     skip: 1,
@@ -146,7 +146,7 @@ void main() {
     blocTest<TransactionsCubit, TransactionsState>(
       'restaura a lista quando a exclusão falha',
       setUp: () => when(() => deleteTransaction(any()))
-          .thenAnswer((_) async => Err(const StorageFailure('Erro'))),
+          .thenAnswer((_) async => const Err(StorageFailure('Erro'))),
       build: build,
       seed: () => TransactionsState(
         month: october,

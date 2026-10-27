@@ -94,7 +94,7 @@ void main() {
   test('propaga falha do repositório', () async {
     when(
       () => repository.getTransactions(start: any(named: 'start'), end: any(named: 'end')),
-    ).thenAnswer((_) async => Err(const StorageFailure()));
+    ).thenAnswer((_) async => const Err(StorageFailure()));
 
     final result = await useCase(SummaryParams(month: october));
 

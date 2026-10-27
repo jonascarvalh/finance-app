@@ -17,7 +17,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final preference = ThemePreference.values.asNameMap()[stored] ?? ThemePreference.system;
       return Ok(preference);
     } on LocalStorageException {
-      return Err(const StorageFailure('Não foi possível ler as preferências.'));
+      return const Err(StorageFailure('Não foi possível ler as preferências.'));
     }
   }
 
@@ -27,7 +27,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       await _local.saveThemePreference(preference.name);
       return const Ok(unit);
     } on LocalStorageException {
-      return Err(const StorageFailure('Não foi possível salvar o tema.'));
+      return const Err(StorageFailure('Não foi possível salvar o tema.'));
     }
   }
 }

@@ -75,10 +75,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
     } on RecordNotFoundException catch (e) {
       return Err(NotFoundFailure(e.message));
     } on LocalStorageException {
-      return Err(const StorageFailure());
+      return Err<T>(const StorageFailure());
     } on ArgumentError {
       // Dado gravado com tipo/categoria desconhecidos.
-      return Err(const StorageFailure('Dados corrompidos encontrados.'));
+      return Err<T>(const StorageFailure('Dados corrompidos encontrados.'));
     }
   }
 }
