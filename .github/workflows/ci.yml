@@ -23,8 +23,21 @@ jobs:
       - name: Dependências
         run: flutter pub get
 
+      # Em caso de falha, o resultado também aparece como anotação no resumo do workflow.
       - name: Análise estática
-        run: flutter analyze
+        run: |
+          if ! flutter analyze > analyze.txt 2>&1; then
+            cat analyze.txt
+            echo "::error title=flutter analyze::$(tail -c 60000 analyze.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
+            exit 1
+          fi
+          cat analyze.txt
 
       - name: Testes
-        run: flutter test
+        run: |
+          if ! flutter test > test.txt 2>&1; then
+            cat test.txt
+            echo "::error title=flutter test::$(grep -v '^[0-9]*:[0-9]* +[0-9]*' test.txt | tail -c 60000 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
+            exit 1
+          fi
+          tail -n 5 test.txt
