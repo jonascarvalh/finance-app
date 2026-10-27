@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fluxo · finanças pessoais</title>
+<meta name="description" content="Fluxo: app de finanças pessoais em Flutter com Clean Architecture, gráficos e tema claro e escuro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Base */
+:root{color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: livro-caixa. Coluna de texto à esquerda, telas do app à direita;
+   cada seção é um "lançamento" com sinal de entrada (+) ou saída (−). */
+:root {
+  --bg: #F5F6FA;        /* surface do tema claro do app */
+  --card: #FFFFFF;
+  --ink: #15161D;
+  --muted: #5A5D6E;
+  --line: #E1E3EB;
+  --accent: #4F46E5;    /* seed do AppTheme */
+  --accent-soft: #E7E6FC;
+  --income: #15803D;
+  --income-soft: #DCFCE7;
+  --expense: #DC2626;
+  --expense-soft: #FEE2E2;
+  --frame: #15161D;
+  --code-bg: #15161D;
+  --code-ink: #E7E8EF;
+
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --s-xs: .8125rem; --s-sm: .9375rem; --s-md: 1.0625rem; --s-lg: 1.375rem;
+  --s-xl: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  --s-hero: clamp(2.5rem, 1.4rem + 4.6vw, 4.75rem);
+  --wrap: 1120px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D0F13; --card: #171A20; --ink: #ECEDF3; --muted: #9A9DAE; --line: #262A33;
+    --accent: #8F89FF; --accent-soft: #23224A;
+    --income: #4ADE80; --income-soft: #113321; --expense: #F87171; --expense-soft: #3B1517;
+    --frame: #2B2F3A; --code-bg: #171A20; --code-ink: #E7E8EF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D0F13; --card: #171A20; --ink: #ECEDF3; --muted: #9A9DAE; --line: #262A33;
+  --accent: #8F89FF; --accent-soft: #23224A;
+  --income: #4ADE80; --income-soft: #113321; --expense: #F87171; --expense-soft: #3B1517;
+  --frame: #2B2F3A; --code-bg: #171A20; --code-ink: #E7E8EF;
+  color-scheme: dark;
+}
+
+/* Mostra o print que combina com o tema de quem está vendo. */
+.phone img.only-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .phone img.only-dark { display: block; }
+  :root:not([data-theme="light"]) .phone img.only-light { display: none; }
+}
+:root[data-theme="dark"] .phone img.only-dark { display: block; }
+:root[data-theme="dark"] .phone img.only-light { display: none; }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--s-md);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -.02em; }
+p { margin: 0; }
+.wrap {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow {
+  font-family: var(--f-mono); font-size: var(--s-xs); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+}
+.pos { color: var(--income); }
+.neg { color: var(--expense); }
+
+/* ── Topo ─────────────────────────────────────── */
+.top { padding-block: 20px; }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+.brand-mark {
+  width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center;
+}
+.top nav { display: flex; gap: 20px; font-size: var(--s-sm); color: var(--muted); }
+.top nav a { text-decoration: none; }
+.top nav a:hover { color: var(--ink); }
+@media (max-width: 640px) { .top nav .hide-sm { display: none; } }
+
+/* ── Hero ─────────────────────────────────────── */
+.hero { padding-block: 40px 72px; }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 48px; align-items: center; }
+.hero h1 { font-size: var(--s-hero); font-weight: 800; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-copy { display: grid; gap: 24px; min-width: 0; }
+.lede { font-size: var(--s-lg); line-height: 1.5; color: var(--muted); max-width: 32ch; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 14px;
+  font-weight: 600; font-size: var(--s-sm); text-decoration: none; border: 1px solid var(--line);
+  background: var(--card); transition: transform .15s ease, border-color .15s ease;
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] .btn.primary { color: #0D0F13; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #0D0F13; } }
+
+/* Mini extrato do mês, com os números reais dos prints. */
+.ledger {
+  border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
+  padding-block: 14px; display: grid; gap: 6px; max-width: 420px; font-size: var(--s-sm);
+}
+.ledger-row { display: flex; justify-content: space-between; gap: 16px; }
+.ledger-row span:first-child { color: var(--muted); }
+.ledger-row.total { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; font-weight: 600; }
+.ledger-row.total span:first-child { color: var(--ink); }
+
+.phones { position: relative; display: flex; justify-content: center; min-width: 0; }
+.phone {
+  width: min(300px, 70vw); max-width: 100%;
+  border: 9px solid var(--frame); border-radius: 40px; overflow: hidden; background: var(--frame);
+  box-shadow: 0 30px 60px -30px rgba(20, 18, 60, .45);
+}
+.phone img { display: block; width: 100%; height: auto; }
+.phones .phone.back {
+  position: absolute; width: min(250px, 56vw); right: 0; top: 56px; transform: rotate(5deg);
+  opacity: .96; z-index: 0;
+}
+.phones .phone.front { position: relative; z-index: 1; transform: translateX(-34px) rotate(-2deg); }
+@media (max-width: 860px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); }
+  .phones { padding-bottom: 24px; }
+  .phones .phone.front { transform: translateX(-20%) rotate(-2deg); }
+  .phones .phone.back { right: 4%; }
+}
+
+/* ── Fatos rápidos ────────────────────────────── */
+.facts { border-block: 1px solid var(--line); background: var(--card); }
+.facts .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.fact { padding-block: 22px; padding-inline: 20px; display: grid; gap: 2px; border-left: 1px solid var(--line); }
+.fact:first-child { border-left: 0; padding-left: 0; }
+.fact b { font-family: var(--f-display); font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; }
+.fact span { font-size: var(--s-sm); color: var(--muted); }
+@media (max-width: 720px) {
+  .facts .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fact:nth-child(3) { border-left: 0; padding-left: 0; }
+  .fact:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+
+/* ── Seções de funcionalidade ─────────────────── */
+section.feature { padding-block: 88px 0; }
+.feature .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.feature.flip .text { order: 2; }
+.feature .text { display: grid; gap: 18px; min-width: 0; max-width: 34rem; }
+.feature h2 { font-size: var(--s-xl); font-weight: 700; }
+.feature p { color: var(--muted); }
+.entry { display: flex; align-items: center; gap: 10px; }
+.sign {
+  width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  font-family: var(--f-mono); font-weight: 600; font-size: .95rem;
+}
+.sign.in { background: var(--income-soft); color: var(--income); }
+.sign.out { background: var(--expense-soft); color: var(--expense); }
+.points { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: var(--s-sm); }
+.points li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; }
+.points li::before { content: "—"; color: var(--accent); font-family: var(--f-mono); }
+.shots { display: flex; justify-content: center; gap: 20px; min-width: 0; }
+.shots .phone { width: min(270px, 44vw); }
+.shots.pair .phone:last-child { margin-top: 48px; }
+@media (max-width: 860px) {
+  section.feature { padding-block: 64px 0; }
+  .feature .wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .feature.flip .text { order: 0; }
+  .shots .phone { width: min(260px, 44vw); }
+  .shots:not(.pair) .phone { width: min(280px, 72vw); }
+}
+
+/* Demo da máscara de moeda */
+.mask-demo {
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px;
+  display: grid; gap: 10px;
+}
+.mask-demo label { font-size: var(--s-xs); color: var(--muted); }
+.mask-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr); align-items: center; gap: 12px; }
+.mask-demo input {
+  width: 100%; font: 600 1.05rem var(--f-mono); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0;
+}
+.mask-demo input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.mask-out { font-family: var(--f-display); font-weight: 800; font-size: 1.6rem; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.arrow { color: var(--muted); font-family: var(--f-mono); }
+
+/* ── Galeria ──────────────────────────────────── */
+.gallery { padding-block: 96px 0; }
+.gallery header { display: grid; gap: 10px; margin-bottom: 28px; }
+.gallery h2 { font-size: var(--s-xl); }
+.strip {
+  display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 14px;
+  scrollbar-color: var(--line) transparent;
+}
+.strip figure { margin: 0; flex: 0 0 auto; width: 200px; scroll-snap-align: start; display: grid; gap: 10px; }
+.strip .phone { width: 100%; border-width: 6px; border-radius: 28px; box-shadow: none; }
+.strip figcaption { font-size: var(--s-xs); color: var(--muted); }
+
+/* ── Rodapé ───────────────────────────────────── */
+footer { border-top: 1px solid var(--line); padding-block: 28px; font-size: var(--s-sm); color: var(--muted); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+footer a { color: var(--ink); font-weight: 600; }
+/* Utilitários usados no crédito do autor (mesmos nomes do Tailwind). */
+.underline { text-decoration-line: underline; }
+.decoration-transparent { text-decoration-color: transparent; }
+.underline-offset-4 { text-underline-offset: 4px; }
+.transition-\[text-decoration-color\] { transition: text-decoration-color .15s cubic-bezier(.4, 0, .2, 1); }
+.hover\:decoration-current:hover { text-decoration-color: currentColor; }
+
+/* Entrada suave das telas do hero, partindo de um estado visível. */
+@media (prefers-reduced-motion: no-preference) {
+  .phones .phone.front { animation: rise .7s cubic-bezier(.2, .8, .2, 1) both; }
+  .phones .phone.back { animation: rise .7s .12s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes rise { from { translate: 0 18px; } to { translate: 0 0; } }
+}
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="Fluxo">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 7c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0"/><path d="M3 12c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0"/><path d="M3 17c2-1.6 4-1.6 6 0s4 1.6 6 0 4-1.6 6 0"/></svg>
+      </span>
+      Fluxo
+    </a>
+    <nav aria-label="Seções">
+      <a class="hide-sm" href="#recursos">Recursos</a>
+      <a href="https://github.com/jonascarvalh/finance-app" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inicio">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">App de finanças pessoais · Flutter</span>
+        <h1>Suas finanças, <em>sem complicação.</em></h1>
+        <p class="lede">Registre entradas e saídas, acompanhe o saldo com gráficos e mantenha tudo salvo no próprio aparelho.</p>
+        <div class="ledger mono" aria-label="Exemplo de resumo do mês">
+          <div class="ledger-row"><span>Entradas · out/2026</span><span class="pos">+R$ 6.500,00</span></div>
+          <div class="ledger-row"><span>Saídas · out/2026</span><span class="neg">−R$ 4.457,78</span></div>
+          <div class="ledger-row total"><span>Resultado do mês</span><span class="pos">+R$ 2.042,22</span></div>
+        </div>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/jonascarvalh/finance-app" target="_blank" rel="noopener noreferrer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.29-1.69-1.29-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a10.9 10.9 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+            Ver no GitHub
+          </a>
+        </div>
+      </div>
+      <div class="phones">
+        <div class="phone back">
+          <img class="only-light" src="img/home-dark.webp" width="640" height="1386" alt="Tela inicial do Fluxo no tema escuro">
+          <img class="only-dark" src="img/home-light.webp" width="640" height="1386" alt="Tela inicial do Fluxo no tema claro">
+        </div>
+        <div class="phone front">
+          <img class="only-light" src="img/home-light.webp" width="640" height="1386" alt="Tela inicial do Fluxo com saldo acumulado de R$ 19.806,77 e gráfico dos últimos 6 meses">
+          <img class="only-dark" src="img/home-dark.webp" width="640" height="1386" alt="Tela inicial do Fluxo com saldo acumulado de R$ 19.806,77 e gráfico dos últimos 6 meses">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="facts">
+    <div class="wrap">
+      <div class="fact"><b>3 abas</b><span>Início, Extrato e Ajustes</span></div>
+      <div class="fact"><b>75 testes</b><span>unidade, bloc e widget</span></div>
+      <div class="fact"><b>100% local</b><span>SQLite no aparelho</span></div>
+      <div class="fact"><b>pt-BR</b><span>datas e moeda em reais</span></div>
+    </div>
+  </div>
+
+  <section class="feature" id="recursos">
+    <div class="wrap">
+      <div class="text">
+        <div class="entry"><span class="sign in" aria-hidden="true">+</span><span class="eyebrow">Início</span></div>
+        <h2>O mês inteiro em uma tela.</h2>
+        <p>Saldo acumulado, entradas, saídas e o resultado do mês logo no topo. Logo abaixo, os gráficos mostram para onde o dinheiro está indo.</p>
+        <ul class="points">
+          <li>Barras comparando entradas e saídas dos últimos 6 meses.</li>
+          <li>Rosca de gastos por categoria. Tocar em uma fatia mostra valor e percentual.</li>
+          <li>Navegação entre meses, sem passar do mês atual.</li>
+        </ul>
+      </div>
+      <div class="shots">
+        <div class="phone">
+          <img class="only-light" src="img/home-categories-light.webp" width="640" height="1386" alt="Gráfico de rosca com gastos por categoria: Moradia 40%, Alimentação 29%">
+          <img class="only-dark" src="img/home-categories-dark.webp" width="640" height="1386" alt="Gráfico de rosca com gastos por categoria no tema escuro">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feature flip">
+    <div class="wrap">
+      <div class="text">
+        <div class="entry"><span class="sign out" aria-hidden="true">−</span><span class="eyebrow">Extrato</span></div>
+        <h2>Cada movimentação no seu dia.</h2>
+        <p>As transações do mês aparecem agrupadas por dia, com o saldo de cada dia ao lado. Dá para filtrar só as entradas ou só as saídas.</p>
+        <ul class="points">
+          <li>Filtro por Todas, Entradas ou Saídas.</li>
+          <li>Arrastar para o lado exclui, com opção de desfazer.</li>
+          <li>Tocar em uma transação abre a edição.</li>
+        </ul>
+      </div>
+      <div class="shots pair">
+        <div class="phone"><img src="img/statement-light.webp" width="640" height="1386" alt="Extrato de outubro no tema claro, agrupado por dia"></div>
+        <div class="phone"><img src="img/statement-dark.webp" width="640" height="1386" alt="Extrato filtrado por saídas no tema escuro"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feature">
+    <div class="wrap">
+      <div class="text">
+        <div class="entry"><span class="sign out" aria-hidden="true">−</span><span class="eyebrow">Nova transação</span></div>
+        <h2>Digite os números, o app cuida da vírgula.</h2>
+        <p>O campo de valor usa uma máscara de moeda: cada dígito entra como centavo. Escolha o tipo, a categoria e a data, e a validação avisa no próprio campo se faltar algo.</p>
+        <div class="mask-demo">
+          <label for="mask-input">Experimente a máscara (só números)</label>
+          <div class="mask-row">
+            <input id="mask-input" class="mono" inputmode="numeric" autocomplete="off" value="8990" maxlength="11" aria-describedby="mask-output">
+            <span class="arrow" aria-hidden="true">→</span>
+            <output id="mask-output" class="mask-out" for="mask-input">R$ 89,90</output>
+          </div>
+        </div>
+      </div>
+      <div class="shots">
+        <div class="phone"><img src="img/form-light.webp" width="640" height="1386" alt="Formulário de nova transação com valor R$ 89,90 e categoria Alimentação"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="feature flip">
+    <div class="wrap">
+      <div class="text">
+        <div class="entry"><span class="sign in" aria-hidden="true">+</span><span class="eyebrow">Ajustes</span></div>
+        <h2>Claro, escuro ou como o sistema preferir.</h2>
+        <p>O tema escolhido fica salvo ao fechar o app. Para explorar os gráficos sem digitar nada, carregue seis meses de dados de exemplo com um toque.</p>
+        <ul class="points">
+          <li>Tema Sistema, Claro ou Escuro.</li>
+          <li>Dados de exemplo para testar o app.</li>
+          <li>Apagar todos os dados, com confirmação.</li>
+        </ul>
+      </div>
+      <div class="shots">
+        <div class="phone"><img src="img/settings-dark.webp" width="640" height="1386" alt="Tela de Ajustes no tema escuro com seletor de tema e opções de dados"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery">
+    <div class="wrap">
+      <header>
+        <span class="eyebrow">Galeria</span>
+        <h2>Todas as telas, nos dois temas.</h2>
+      </header>
+      <div class="strip" tabindex="0" aria-label="Galeria de telas, role para o lado">
+        <figure><div class="phone"><img src="img/home-light.webp" width="640" height="1386" alt="Início, tema claro" loading="lazy"></div><figcaption>Início · claro</figcaption></figure>
+        <figure><div class="phone"><img src="img/home-dark.webp" width="640" height="1386" alt="Início, tema escuro" loading="lazy"></div><figcaption>Início · escuro</figcaption></figure>
+        <figure><div class="phone"><img src="img/home-categories-light.webp" width="640" height="1386" alt="Gastos por categoria, tema claro" loading="lazy"></div><figcaption>Gastos por categoria · claro</figcaption></figure>
+        <figure><div class="phone"><img src="img/home-categories-dark.webp" width="640" height="1386" alt="Gastos por categoria, tema escuro" loading="lazy"></div><figcaption>Gastos por categoria · escuro</figcaption></figure>
+        <figure><div class="phone"><img src="img/statement-light.webp" width="640" height="1386" alt="Extrato, tema claro" loading="lazy"></div><figcaption>Extrato · claro</figcaption></figure>
+        <figure><div class="phone"><img src="img/statement-dark.webp" width="640" height="1386" alt="Extrato filtrado por saídas, tema escuro" loading="lazy"></div><figcaption>Extrato, só saídas · escuro</figcaption></figure>
+        <figure><div class="phone"><img src="img/form-light.webp" width="640" height="1386" alt="Nova transação, tema claro" loading="lazy"></div><figcaption>Nova transação · claro</figcaption></figure>
+        <figure><div class="phone"><img src="img/settings-dark.webp" width="640" height="1386" alt="Ajustes, tema escuro" loading="lazy"></div><figcaption>Ajustes · escuro</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Desenvolvido por<!-- --> <a href="https://jonascarvalhodev.vercel.app/" target="_blank" rel="noopener noreferrer" class="underline decoration-transparent underline-offset-4 transition-[text-decoration-color] hover:decoration-current">Jonas Carvalho</a></p>
+    <span class="mono">Licença MIT</span>
+  </div>
+</footer>
+
+<script>
+  // Mesma regra do CurrencyInputFormatter do app: os dígitos entram como centavos.
+  (function () {
+    var input = document.getElementById('mask-input');
+    var output = document.getElementById('mask-output');
+    var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    function render() {
+      var digits = input.value.replace(/\D/g, '').replace(/^0+/, '');
+      if (input.value !== digits) input.value = digits;
+      var cents = digits ? parseInt(digits, 10) : 0;
+      output.textContent = brl.format(cents / 100).replace(/ /g, ' ');
+    }
+    input.addEventListener('input', render);
+    render();
+  })();
+</script>
+</body>
+</html>
